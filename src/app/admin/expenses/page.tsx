@@ -1,0 +1,1 @@
+import{AdminPlaceholder}from"@/components/admin-placeholder";export default function Page(){return <AdminPlaceholder title="Expenses" description="Bills are stored privately and every change is auditable." fields={['Expense title','Category','Amount (₹)','Date','Paid by','Description']}/>}

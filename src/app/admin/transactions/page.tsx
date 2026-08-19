@@ -1,0 +1,1 @@
+import{AdminPlaceholder}from"@/components/admin-placeholder";export default function Page(){return <AdminPlaceholder title="Immutable ledger" description="Financial entries cannot be edited or deleted; corrections use reversals."/>}

@@ -1,0 +1,1 @@
+import{AdminPlaceholder}from"@/components/admin-placeholder";export default function Page(){return <AdminPlaceholder title="Withdrawals" description="Requested → approved → completed. Only completed withdrawals reduce balance." fields={['Amount (₹)','Purpose','Payment method','Description']}/>}

@@ -1,0 +1,1 @@
+import{AdminPlaceholder}from"@/components/admin-placeholder";export default function Page(){return <AdminPlaceholder title="Mandal settings" description="Super administrators control public branding and receipt details." fields={['Mandal name','Festival year','Address','Contact number','Receipt prefix','Authorized signatory','Receipt footer','UPI ID']}/>}

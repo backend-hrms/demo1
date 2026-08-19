@@ -1,0 +1,1 @@
+import{AdminPlaceholder}from"@/components/admin-placeholder";export default function Page(){return <AdminPlaceholder title="Donations & donors" description="Search verified, pending, failed, refunded, and cancelled donations."/>}

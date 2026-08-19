@@ -1,0 +1,1 @@
+import{AdminPlaceholder}from"@/components/admin-placeholder";export default function Page(){return <AdminPlaceholder title="Record cash donation" description="Authorized collection staff can issue a verified cash receipt." fields={['Donor name','Mobile','Amount (₹)','Date','Collector','Notes']}/>}

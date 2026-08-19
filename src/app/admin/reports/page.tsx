@@ -1,0 +1,1 @@
+import{AdminPlaceholder}from"@/components/admin-placeholder";export default function Page(){return <AdminPlaceholder title="Reports" description="Daily, monthly, cash, online, expense, withdrawal, donor, and complete-ledger reports."/>}
