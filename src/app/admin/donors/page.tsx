@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CancelDonationButton } from "@/components/cancel-donation-button";
+import { VerifyCashPledgeButton } from "@/components/verify-cash-pledge-button";
 
 type DonationRow = {
   id: string;
@@ -129,6 +130,9 @@ export default async function DonorsPage({
                         {userData?.role === "SUPER_ADMIN" && row.payment_method === "CASH" && row.status === "VERIFIED" && (
                           <CancelDonationButton donationId={row.id} receiptNumber={row.receipt_number ?? ""} />
                         )}
+                        {["SUPER_ADMIN", "COLLECTION_MANAGER"].includes(userData?.role ?? "") && row.payment_method === "CASH" && row.status === "PENDING" && (
+                          <VerifyCashPledgeButton donationId={row.id} />
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -157,6 +161,9 @@ export default async function DonorsPage({
                   )}
                   {userData?.role === "SUPER_ADMIN" && row.payment_method === "CASH" && row.status === "VERIFIED" && (
                     <CancelDonationButton donationId={row.id} receiptNumber={row.receipt_number ?? ""} />
+                  )}
+                  {["SUPER_ADMIN", "COLLECTION_MANAGER"].includes(userData?.role ?? "") && row.payment_method === "CASH" && row.status === "PENDING" && (
+                    <VerifyCashPledgeButton donationId={row.id} />
                   )}
                 </div>
               </article>
