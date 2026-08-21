@@ -1,3 +1,49 @@
-import Link from"next/link";import{Clock3,Search}from"lucide-react";import{createClient}from"@/lib/supabase/server";import{VerifyCashPledgeButton}from"@/components/verify-cash-pledge-button";export const dynamic="force-dynamic";export const revalidate=0;
-const money=(minor:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR"}).format(minor/100);
-export default async function PendingAmountPage({searchParams}:{searchParams:Promise<{q?:string}>}){const params=await searchParams,query=(params.q??"").trim().toLowerCase(),sb=await createClient();const[{data,error},{data:user}]=await Promise.all([sb.from("donations").select("id,donor_name_snapshot,donor_mobile_snapshot,amount_minor,payment_method,status,donation_date,created_at").eq("status","PENDING").order("created_at",{ascending:false}).limit(500),sb.from("users").select("role").single()]);const all=data??[],rows=all.filter(row=>!query||`${row.donor_name_snapshot} ${row.donor_mobile_snapshot}`.toLowerCase().includes(query)),total=all.reduce((sum,row)=>sum+row.amount_minor,0),cash=all.filter(row=>row.payment_method==="CASH").reduce((sum,row)=>sum+row.amount_minor,0),online=total-cash,canVerify=["SUPER_ADMIN","COLLECTION_MANAGER"].includes(user?.role??"");return <div className="p-5 md:p-8"><p className="text-sm font-bold text-orange-700">COLLECTION DESK</p><h1 className="mt-1 text-4xl">Pending amount</h1><p className="mt-2 text-stone-500">Money awaiting cash confirmation or secure online payment verification. Pending amounts do not count as collected.</p><div className="mt-6 grid gap-4 sm:grid-cols-3"><div className="card p-5"><p className="text-sm text-stone-500">Total pending</p><p className="mt-1 text-3xl font-bold">{money(total)}</p></div><div className="card p-5"><p className="text-sm text-stone-500">Pending cash</p><p className="mt-1 text-3xl font-bold">{money(cash)}</p></div><div className="card p-5"><p className="text-sm text-stone-500">Pending online</p><p className="mt-1 text-3xl font-bold">{money(online)}</p></div></div><form className="card mt-6 flex flex-col gap-3 p-4 sm:flex-row"><label className="relative flex-1"><Search className="absolute left-3 top-3.5 text-stone-400" size={18}/><input autoComplete="off" className="input pl-10" name="q" defaultValue={params.q} placeholder="Search donor name or mobile number"/></label><button className="btn btn-primary" type="submit">Search donor</button>{query&&<Link className="btn border" href="/admin/pending">Clear</Link>}</form>{error?<p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 font-semibold text-red-800">Pending donations could not be loaded.</p>:all.length===0?<div className="card mt-6 py-16 text-center"><Clock3 className="mx-auto text-stone-300" size={42}/><p className="mt-3 font-bold">No pending amounts</p><p className="mt-1 text-sm text-stone-500">All recorded donations have been processed.</p></div>:rows.length===0?<div className="card mt-6 py-14 text-center"><Search className="mx-auto text-stone-300" size={40}/><p className="mt-3 font-bold">No donor found</p><p className="mt-1 text-sm text-stone-500">Try another name or mobile number.</p><Link className="mt-4 inline-block font-bold text-orange-700" href="/admin/pending">Show all pending donors</Link></div>:<section className="card mt-6 overflow-hidden"><div className="border-b p-5"><h2 className="text-2xl">Pending donations</h2><p className="text-sm text-stone-500">{rows.length} payment{rows.length===1?"":"s"} {query?"matching your search":"awaiting verification"}</p></div><div className="divide-y">{rows.map(row=><article className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between" key={row.id}><div><p className="font-bold">{row.donor_name_snapshot}</p><p className="text-sm text-stone-500">{row.donor_mobile_snapshot} · {new Date(row.donation_date||row.created_at).toLocaleDateString("en-IN")}</p><span className="mt-2 inline-block rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">{row.payment_method} · PENDING</span></div><div className="sm:text-right"><p className="text-xl font-bold">{money(row.amount_minor)}</p><div className="mt-2">{row.payment_method==="CASH"&&canVerify?<VerifyCashPledgeButton donationId={row.id}/>:<span className="text-xs font-semibold text-stone-500">Awaiting secure verification</span>}</div></div></article>)}</div></section>}</div>}
+import Link from "next/link";
+import { Clock3, Search } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { VerifyCashPledgeButton } from "@/components/verify-cash-pledge-button";
+import { PendingDonationForm } from "@/components/pending-donation-form";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+const money = (minor: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(minor / 100);
+
+export default async function PendingAmountPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const params = await searchParams;
+  const query = (params.q ?? "").trim().toLowerCase();
+  const sb = await createClient();
+  const [{ data, error }, { data: user }] = await Promise.all([
+    sb.from("donations").select("id,donor_name_snapshot,donor_mobile_snapshot,amount_minor,payment_method,status,donation_date,created_at").eq("status", "PENDING").order("created_at", { ascending: false }).limit(500),
+    sb.from("users").select("role").single(),
+  ]);
+  const all = data ?? [];
+  const rows = all.filter((row) => !query || `${row.donor_name_snapshot} ${row.donor_mobile_snapshot}`.toLowerCase().includes(query));
+  const total = all.reduce((sum, row) => sum + row.amount_minor, 0);
+  const cash = all.filter((row) => row.payment_method === "CASH").reduce((sum, row) => sum + row.amount_minor, 0);
+  const online = total - cash;
+  const canVerify = ["SUPER_ADMIN", "COLLECTION_MANAGER"].includes(user?.role ?? "");
+
+  return <div className="p-5 md:p-8">
+    <p className="text-sm font-bold text-orange-700">COLLECTION DESK</p>
+    <h1 className="mt-1 text-4xl">Pending amount</h1>
+    <p className="mt-2 text-stone-500">Money awaiting cash confirmation or secure online payment verification. Pending amounts do not count as collected.</p>
+    {canVerify && <PendingDonationForm />}
+    <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="card p-5"><p className="text-sm text-stone-500">Total pending</p><p className="mt-1 text-3xl font-bold">{money(total)}</p></div>
+      <div className="card p-5"><p className="text-sm text-stone-500">Pending cash</p><p className="mt-1 text-3xl font-bold">{money(cash)}</p></div>
+      <div className="card p-5"><p className="text-sm text-stone-500">Pending online</p><p className="mt-1 text-3xl font-bold">{money(online)}</p></div>
+    </div>
+    <form className="card mt-6 flex flex-col gap-3 p-4 sm:flex-row">
+      <label className="relative flex-1"><Search className="absolute left-3 top-3.5 text-stone-400" size={18}/><input autoComplete="off" className="input pl-10" name="q" defaultValue={params.q} placeholder="Search donor name or mobile number"/></label>
+      <button className="btn btn-primary" type="submit">Search donor</button>{query && <Link className="btn border" href="/admin/pending">Clear</Link>}
+    </form>
+    {error ? <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 font-semibold text-red-800">Pending donations could not be loaded.</p>
+      : all.length === 0 ? <Empty title="No pending amounts" text="All recorded donations have been processed." />
+      : rows.length === 0 ? <div className="card mt-6 py-14 text-center"><Search className="mx-auto text-stone-300" size={40}/><p className="mt-3 font-bold">No donor found</p><p className="mt-1 text-sm text-stone-500">Try another name or mobile number.</p><Link className="mt-4 inline-block font-bold text-orange-700" href="/admin/pending">Show all pending donors</Link></div>
+      : <section className="card mt-6 overflow-hidden"><div className="border-b p-5"><h2 className="text-2xl">Pending donations</h2><p className="text-sm text-stone-500">{rows.length} payment{rows.length === 1 ? "" : "s"} {query ? "matching your search" : "awaiting verification"}</p></div><div className="divide-y">{rows.map((row) => <article className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between" key={row.id}><div><p className="font-bold">{row.donor_name_snapshot}</p><p className="text-sm text-stone-500">{row.donor_mobile_snapshot} · {new Date(row.donation_date || row.created_at).toLocaleDateString("en-IN")}</p><span className="mt-2 inline-block rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">{row.payment_method} · PENDING</span></div><div className="sm:text-right"><p className="text-xl font-bold">{money(row.amount_minor)}</p><div className="mt-2">{row.payment_method === "CASH" && canVerify ? <VerifyCashPledgeButton donationId={row.id}/> : <span className="text-xs font-semibold text-stone-500">Awaiting secure verification</span>}</div></div></article>)}</div></section>}
+  </div>;
+}
+
+function Empty({ title, text }: { title: string; text: string }) {
+  return <div className="card mt-6 py-16 text-center"><Clock3 className="mx-auto text-stone-300" size={42}/><p className="mt-3 font-bold">{title}</p><p className="mt-1 text-sm text-stone-500">{text}</p></div>;
+}
